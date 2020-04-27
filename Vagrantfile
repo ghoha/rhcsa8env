@@ -23,7 +23,7 @@ config.vm.define "server2" do |server2|
       server2.customize ['storageattach', :id,  '--storagectl', 'SATA Controller', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', file_to_disk1]
       end
   end
-  
+
     server2.vm.provision "shell", inline: <<-SHELL
     yes| sudo mkfs.ext4 /dev/sdb
     SHELL
@@ -73,7 +73,28 @@ config.vm.define "server1" do |server1|
    end
    server1.vm.provision :shell, :inline => "reboot", run: "always"
 end
+# IPA Server
+config.vm.define "ipa" do |ipa|
+  ipa.vm.box = "rdbreak/rhel8node"
+  ipa.vm.provision :shell, :inline => "sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config; sudo systemctl restart sshd;", run: "always"
+  ipa.vm.provision :shell, :inline => "echo \'vagrant\' | sudo passwd vagrant --stdin", run: "always"
+  ipa.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__exclude: ".git/"
+#  ipa.vm.hostname = "ipa.example.com"
+  ipa.vm.network "private_network", ip: "192.168.55.5"
+  ipa.vm.provider :virtualbox do |ipa|
+    ipa.customize ['modifyvm', :id,'--memory', '2048']
+    end
+
+  ipa.vm.provision :ansible_local do |ansible|
+    ansible.playbook = "/vagrant/playbooks/ipa.yml"
+    ansible.install = false
+    ansible.compatibility_mode = "2.0"
+    ansible.inventory_path = "/vagrant/inventory"
+    ansible.config_file = "/vagrant/ansible.cfg"
+    ansible.limit = "all"
+  end
+  ipa.vm.provision :shell, :inline => "reboot", run: "always"
 end
 
 
-
+end
