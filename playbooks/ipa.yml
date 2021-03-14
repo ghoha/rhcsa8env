@@ -170,6 +170,21 @@
          # You are logged into \"`hostname`\" as the \"`whoami`\" account.
          # This system is running `cat /etc/redhat-release`
          "
+
+  - name: Creating lisa home for nfs export
+    file:
+      path: /ldaphome/lisa
+      state: directory
+      owner: lisa
+      group: lisa
+      mode: '0700'
+  - name: Creating dave home for nfs export
+    file:
+      path: /ldaphome/dave
+      state: directory
+      owner: dave
+      group: dave
+      mode: '0700'
   - name: Adjusting Services then Rebooting
     selinux:
       policy: targeted
